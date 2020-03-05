@@ -1,10 +1,12 @@
-const socket = io('http://3.15.38.202:3000')
+//const socket = io('http://3.15.38.202:3000') // amazon instance
+const socket = io('http://192.168.1.9:3000') // local
 const messageForm = document.getElementById('send-container')
 const messageContainer = document.getElementById('message-container')
 const messageInput = document.getElementById('message-input')
 
 
-const name = prompt("What is your name?") // user connects and prompts for name
+//const name = prompt("What is your name?") // user connects and prompts for name
+const name = "Victor"
 appendMessage("You joined!") // tells you you joined chat room
 socket.emit('new-user', name) // sends a new-user event
 
