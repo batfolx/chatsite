@@ -1,8 +1,9 @@
 //const socket = io('http://3.15.38.202:3000') // amazon instance
-const socket = io('http://192.168.1.9:3000') // local
+const socket = io('http://172.30.5.220:3000') // local
 const messageForm = document.getElementById('send-container')
 const messageContainer = document.getElementById('message-container')
 const messageInput = document.getElementById('message-input')
+const onlineUsers = document.getElementById('online-users-container')
 
 
 //const name = prompt("What is your name?") // user connects and prompts for name
@@ -26,6 +27,10 @@ socket.on('user-disconnect', message => {
   appendMessage(message)
 })
 
+socket.on('update-online-users', users => {
+  setOnlineUsers(users)
+})
+
 
 //socket.on('on-disconnect')
 
@@ -42,10 +47,19 @@ messageForm.addEventListener('submit', e => {
 
 
 function appendMessage(message) {
-
   const messageDiv = document.createElement('div')
   messageDiv.innerText = message
   messageContainer.append(messageDiv)
+}
 
+
+function setOnlineUsers(users) {
+  onlineUsers.innerHtml = ""
+  var info = ""
+  for (var user in users) {
+    info += `$Online: ${users[user]}\n`
+  }
+  info += "Dummytext\n"
+  onlineUsers.innerHtml = info
 
 }
