@@ -11,7 +11,7 @@ app.use("/static", express.static('./static/'));
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/static/index.html');
 });
-
+192
 
 
 io.on('connection', socket => {
@@ -27,7 +27,18 @@ io.on('connection', socket => {
 
   socket.on('send-chat-message', message => { // send-chat-message is name of event, as defined in script.js
     socket.broadcast.emit('chat-message', message) // broadcast.emit sends everyone the message, except for the person that sent message
-  })
+  });
+
+  socket.on('name-change', data => {
+    let prevName = data['before'];
+    let currName = data['after'];
+    users[socket.id] = currName;
+
+    let message = `${prevName} has changed their name to ${currName}!`;
+    socket.emit('chat-message', message);
+    io.emit('update-online-users', users)
+
+  });
 
 
 

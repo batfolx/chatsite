@@ -1,59 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Chat App</title>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
-  <script defer src="static/script.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chat App</title>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
+    <script defer src="static/script.js"></script>
 
-  <style>
+    <style>
 
-	#container {
-    display: flex;
+        #container {
+            display: flex;
+        }
 
+        #message-container {
+            flex: 0.75;
+            border-style: ridge;
 
-    }
+        }
 
-    #message-container {
-        flex: 0.75;
-        border-style: ridge;
-
-       /* background: lightblue; */
-    }
-
-    #online-users-container {
-        flex: 0.25;
-        border-style: ridge;
-    /* Grow to rest of container */
-      /*background: lightgreen; */
-    /* Just so it's visible */
+        #online-users-container {
+            flex: 0.25;
+            border-style: ridge;
 
 
-    }
+        }
 
-    #send-container {
+        #send-container {
 
-    	position: fixed;
-    	bottom: 0;
-    	display: inline-block;
+            position: fixed;
+            bottom: 0;
+            display: inline-block;
+            align-content: center;
+        }
+
+        #content-container {
+            text-align: center;
+        }
+
+        #change-name-container {
+            position: fixed;
+            bottom: 2.5%;
+            display: inline-block;
+        }
 
 
-    }
 
-  </style>
+    </style>
 </head>
 <body>
+<div id="content-container">
+    <div id="container">
+        <div id="message-container"></div>
+        <div id="online-users-container"></div>
+    </div>
 
-  <div id="container">
-     <div id="message-container"></div>
-   	 <div id="online-users-container"></div>
-  </div>
-
+    <div id="form-container" style="text-align:center">
         <form id="send-container">
             <input type="text" id="message-input">
             <button type="submit" id="send-button">Send</button>
-      </form>
+        </form>
+
+        <form id="change-name-container">
+            <input type="text" id="name-input">
+            <button type="submit" id="name-submit-button">Change Name</button>
+        </form>
+    </div>
+</div>
 </body>
 </html>
