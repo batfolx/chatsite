@@ -1,16 +1,29 @@
 //const socket = io('http://3.15.38.202:3000') // amazon instance
-const socket = io('http://192.168.1.9:3000') // local
-const messageForm = document.getElementById('send-container')
-const messageContainer = document.getElementById('message-container')
-const messageInput = document.getElementById('message-input')
-const onlineUsers = document.getElementById('online-users-container')
-const changeNameForm = document.getElementById('change-name-container')
+const socket = io('http://192.168.1.9:3000'); // local
+const messageForm = document.getElementById('send-container');
+const messageContainer = document.getElementById('message-container');
+const messageInput = document.getElementById('message-input');
+const onlineUsers = document.getElementById('online-users-container');
+const changeNameForm = document.getElementById('change-name-container');
+
 
 
 let name = prompt("What is your name?"); // user connects and prompts for name
 //const name = "Victor"
 appendMessage("You joined!", true) ;// tells you you joined chat room
 socket.emit('new-user', name); // sends a new-user event
+socket.on('show-chat-history', chatHistory => {
+    console.log(chatHistory);
+    for (let chat in chatHistory) {
+        const data = chatHistory[chat]['data'];
+        const timestamp = chatHistory[chat]['time_stamp'];
+        appendMessage(data, false);
+        appendMessage(timestamp, false);
+    }
+
+});
+
+
 
 socket.on('update-online-users', users => {
     setOnlineUsers(users);
@@ -18,7 +31,9 @@ socket.on('update-online-users', users => {
 });
 
 socket.on('chat-message', data => {
-    appendMessage(data, false);
+    appendMessage(data['data'], false);
+    console.log('appending timestamp');
+    appendMessage(data['timestamp'], false);
 });
 
 // these are kind of like action listeners, with 'user-connected' being
@@ -32,14 +47,19 @@ socket.on('user-disconnect', message => {
     appendMessage(message, false);
 });
 
+
+
 // the button inside of message form acts as the listener
 messageForm.addEventListener('submit', e => {
     e.preventDefault(); // prevents page from refreshing
     const message = messageInput.value; // get value from message input
-    const data = `${name}: ${message}`;
+    const data = {'data': `${name}: ${message}`,
+                  'timestamp': `${getTime()}`,
+                  'message': message};
     socket.emit('send-chat-message', data) ;// use the socket from script.js to send a message event
     messageInput.value = '' ;//reset message input
-    appendMessage(`You: ${message}`, true)
+    appendMessage(`You: ${message}`, true);
+    appendMessage(data['timestamp'], true);
 });
 
 changeNameForm.addEventListener('submit', e => {
@@ -47,7 +67,7 @@ changeNameForm.addEventListener('submit', e => {
 
   e.preventDefault();
   data['before'] = name;
-  input = document.getElementById('name-input');
+  const input = document.getElementById('name-input');
   if (input.value !== '') {name = input.value}
   else {return}
   data['after'] = input.value;
@@ -58,19 +78,14 @@ changeNameForm.addEventListener('submit', e => {
 });
 
 
-
-
 function appendMessage(message, self) {
     const messageDiv = document.createElement('div');
-    const timestamp = document.createElement('div');
-    timestamp.value = new Date().getTime();
-    messageDiv.innerText = message + "\n" + timestamp.value ;
+    messageDiv.innerText = message + "\n";
     if (self) {
         messageDiv.style.backgroundColor = "white"
     } else {
         messageDiv.style.backgroundColor = "lightgray"
     }
-    messageDiv.append(timestamp);
     messageContainer.append(messageDiv)
 }
 
@@ -87,5 +102,12 @@ function setOnlineUsers(users) {
         }
     }
     onlineUsers.innerText = info
+}
 
+
+function getTime() {
+    var d = new Date();
+    var datestring = d.getDate()  + "-" + (d.getMonth()+1) + "-" + d.getFullYear() + " " +
+        d.getHours() + ":" + d.getMinutes();
+    return datestring;
 }
