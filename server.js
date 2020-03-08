@@ -5,10 +5,10 @@ const io = require('socket.io')(http);
 const mysql = require('mysql');
 
 var conn = mysql.createConnection({
-  host: 'localhost',
-  user: '',
-  password: "",
-  database: ''
+    host: '',
+    user: '',
+    password: "",
+    database: ''
 });
 
 const users = {};
@@ -22,66 +22,103 @@ app.get('/', function (req, res) {
 });
 
 io.on('connection', socket => {
+    /* listens for a new user */
     socket.on('new-user', name => {
-        /* when user connects we send them the chat history */
-        conn.query('SELECT * FROM messages', (err, rows) => {
-            socket.emit('show-chat-history', rows);
-        });
-
-
-        /* we associate a name to the socket */
-        users[socket.id] = name;
-
-        /* tell everyone that some connected */
-        socket.broadcast.emit('user-connected', name);
-
-        /* broadcast to everyone  */
-        io.emit('update-online-users', users);
-
+        handleNewUser(socket, name);
     });
 
-
-    /* send-chat-message is name of event, as defined in script.js */
+    /* listens for the send-chat-message event*/
     socket.on('send-chat-message', data => {
-
-        /* broadcast.emit sends everyone the message, except for the person that sent message */
-        socket.broadcast.emit('chat-message', data);
-        console.log(data);
-        const data_ = data['data'];
-        const message = data['message'];
-        const timestamp = data['timestamp'];
-        const name = users[socket.id];
-
-        /* gather information from the data sent back from client to insert into database  */
-        const sql = `INSERT INTO messages (message, name, time_stamp, data) VALUES ('${message}', '${name}', '${timestamp}', '${data_}')`;
-        conn.query(sql, (err, result) => { if (err) console.log(err); })
+        handleSendChatMessage(socket, data);
     });
 
-
-    /* handles the name change of a person */
+    /* listens for the name-change event */
     socket.on('name-change', data => {
-        let prevName = data['before'];
-        let currName = data['after'];
-        users[socket.id] = currName;
-
-        let message = `${prevName} has changed their name to ${currName}!`;
-        io.emit('chat-message', message);
-        io.emit('update-online-users', users)
-
+        handleNameChange(socket, data);
     });
 
-
+    /* handles the disconnect of a user */
     socket.on('disconnect', () => {
-        if (users[socket.id] === typeof undefined) return;
-        socket.broadcast.emit('user-disconnect', `${users[socket.id]} has disconnected`);
-        updateDisconnect(conn, users[socket.id]);
-        delete users[socket.id];
-        socket.broadcast.emit('update-online-users', users);
+        handleDisconnect(socket);
     })
 });
 
 
-function updateDisconnect(connection, name) {
+/**
+ * Handles the initial connection of a user
+ * @param socket the socket the user is using
+ * @param name the name of the user
+ */
+function handleNewUser(socket, name) {
+    /* when user connects we send them the chat history */
+    conn.query('SELECT * FROM messages', (err, rows) => {
+        socket.emit('show-chat-history', rows);
+    });
+
+    /* we associate a name to the socket */
+    users[socket.id] = name;
+
+    /* tell everyone that some connected */
+    socket.broadcast.emit('user-connected', name);
+
+    /* broadcast to everyone */
+    io.emit('update-online-users', users);
+}
+
+/**
+ * Handles sending the chat message to everybody
+ * @param socket
+ * @param data
+ */
+function handleSendChatMessage(socket, data) {
+    /* broadcast.emit sends everyone the message, except for the person that sent message because */
+    /* We have already accounted for their message being added in script.js */
+    socket.broadcast.emit('chat-message', data);
+    const data_ = data['data'];
+    const message = data['message'];
+    const timestamp = data['timestamp'];
+    const name = users[socket.id];
+
+    /* gather information from the data sent back from client to insert into database  */
+    const sql = `INSERT INTO messages (message, name, time_stamp, data) VALUES ('${message}', '${name}', '${timestamp}', '${data_}')`;
+    conn.query(sql, (err, result) => { if (err) console.log(err); })
+}
+
+/**
+ * This function handles the users name change and broadcasts the name change to everyone
+ * as well as updating the name in the online users container
+ * @param socket the socket connection
+ * @param data the data sent from the client containing the changed name and the previous alias/name
+ */
+function handleNameChange(socket, data) {
+    let prevName = data['before'];
+    let currName = data['after'];
+    users[socket.id] = currName;
+    let message = `${prevName} has changed their name to ${currName}!`;
+    io.emit('chat-message', message);
+    io.emit('update-online-users', users)
+}
+
+
+
+/**
+ * This function handles the disconnect of a user from the site.
+ * @param socket the socket connection.
+ */
+function handleDisconnect(socket) {
+    if (users[socket.id] === typeof undefined) return;
+    socket.broadcast.emit('user-disconnect', `${users[socket.id]} has disconnected`);
+    updateDisconnectInDb(conn, users[socket.id]);
+    delete users[socket.id];
+    socket.broadcast.emit('update-online-users', users);
+}
+
+/**
+ * This
+ * @param connection the MySQL database connection.
+ * @param name the users name.
+ */
+function updateDisconnectInDb(connection, name) {
     const message = `${name} has disconnected`;
     const data = message;
     const timestamp = getTime();
@@ -90,6 +127,10 @@ function updateDisconnect(connection, name) {
 }
 
 
+/**
+ * Gets the time in a neatly formatted way
+ * @returns {string} -> the time
+ */
 function getTime() {
     var d = new Date();
     var datestring = d.getDate()  + "-" + (d.getMonth()+1) + "-" + d.getFullYear() + " " +
