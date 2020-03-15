@@ -12,7 +12,7 @@
     <style>
 
         #container {
-            display: flex;
+             display: flex;
         }
 
         #message-container {
@@ -24,7 +24,7 @@
         #online-users-container {
             flex: 0.25;
             border-style: ridge;
-
+            background-color: beige;
 
         }
 
@@ -32,8 +32,6 @@
 
             position: fixed;
             bottom: 0;
-            display: inline-block;
-            align-content: center;
         }
 
         #content-container {
@@ -46,6 +44,11 @@
             display: inline-block;
         }
 
+        #form-container {
+            float: right;
+            width: 20%;
+        }
+
 
 
     </style>
@@ -53,21 +56,21 @@
 <body>
 <div id="content-container">
     <div id="container">
-        <div id="message-container"></div>
-        <div id="online-users-container"></div>
+        <div id="message-container">Message container</div>
+        <div id="online-users-container">Online Users</div>
     </div>
 
-    <div id="form-container" style="text-align:center">
-        <form id="send-container">
-            <input type="text" id="message-input">
-            <button type="submit" id="send-button">Send</button>
-        </form>
+</div>
+<div id="form-container">
+    <form id="send-container">
+        <input type="text" id="message-input">
+        <button type="submit" id="send-button">Send</button>
+    </form>
 
-        <form id="change-name-container">
-            <input type="text" id="name-input">
-            <button type="submit" id="name-submit-button">Change Name</button>
-        </form>
-    </div>
+    <form id="change-name-container">
+        <input type="text" id="name-input">
+        <button type="submit" id="name-submit-button">Change Name</button>
+    </form>
 </div>
 </body>
 </html>

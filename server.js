@@ -7,7 +7,7 @@ const mysql = require('mysql');
 var conn = mysql.createConnection({
     host: '',
     user: '',
-    password: "",
+    password: '',
     database: ''
 });
 
@@ -41,26 +41,28 @@ io.on('connection', socket => {
     socket.on('disconnect', () => {
         handleDisconnect(socket);
     })
+
+
 });
 
 
 /**
  * Handles the initial connection of a user
  * @param socket the socket the user is using
- * @param name the name of the user
+ * @param data the name of the user
  */
-function handleNewUser(socket, name) {
+function handleNewUser(socket, data) {
     /* when user connects we send them the chat history */
     conn.query('SELECT * FROM messages', (err, rows) => {
         socket.emit('show-chat-history', rows);
     });
 
     /* we associate a name to the socket */
-    users[socket.id] = name;
+    users[socket.id] = data['name'];
 
     /* tell everyone that some connected */
-    socket.broadcast.emit('user-connected', name);
-
+    socket.broadcast.emit('user-connected', data);
+    console.log(users);
     /* broadcast to everyone */
     io.emit('update-online-users', users);
 }
@@ -77,7 +79,7 @@ function handleSendChatMessage(socket, data) {
     const data_ = data['data'];
     const message = data['message'];
     const timestamp = data['timestamp'];
-    const name = users[socket.id];
+    const name = data['name'];
 
     /* gather information from the data sent back from client to insert into database  */
     const sql = `INSERT INTO messages (message, name, time_stamp, data) VALUES ('${message}', '${name}', '${timestamp}', '${data_}')`;
@@ -106,8 +108,16 @@ function handleNameChange(socket, data) {
  * @param socket the socket connection.
  */
 function handleDisconnect(socket) {
-    if (users[socket.id] === typeof undefined) return;
-    socket.broadcast.emit('user-disconnect', `${users[socket.id]} has disconnected`);
+    /* check to see if the socket is null */
+    if (users[socket.id] === undefined) return;
+    if (users[socket.id] === null) return;
+    const n = users[socket.id];
+    const data = {
+        'name': n,
+        'message': `${n} has disconnected!`,
+        'timestamp': getTime()
+    };
+    socket.broadcast.emit('user-disconnect', data);
     updateDisconnectInDb(conn, users[socket.id]);
     delete users[socket.id];
     socket.broadcast.emit('update-online-users', users);
@@ -132,13 +142,23 @@ function updateDisconnectInDb(connection, name) {
  * @returns {string} -> the time
  */
 function getTime() {
-    var d = new Date();
-    var datestring = d.getDate()  + "-" + (d.getMonth()+1) + "-" + d.getFullYear() + " " +
+    const d = new Date();
+    return d.getDate()  + "-" + (d.getMonth()+1) + "-" + d.getFullYear() + " " +
         d.getHours() + ":" + d.getMinutes();
-    return datestring;
 }
 
 
 http.listen(3000, function () {
     console.log('listening on *:3000');
 });
+
+
+/*
+*
+* create table messages(
+    -> message varchar(255),
+    -> name varchar(255),
+    -> time_stamp varchar(255),
+    -> data varchar(255)
+    -> );
+ */
